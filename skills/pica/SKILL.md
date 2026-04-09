@@ -15,6 +15,7 @@ description: >-
 - **Never guess model IDs**: Always use `pica model search` + `pica model info` to get exact `provider:modelId` strings.
 - **Always respect preflight**: `pica generate` now runs preflight before upload/dispatch. Treat preflight failures as input problems to fix, not as something to brute-force past.
 - **Use `--schema` for exact command shape**: these docs teach workflow and judgment. When you need the current flags, enums, or input contract, inspect `pica --schema` (for example `pica --schema=.generate`, `pica --schema=.task`, `pica --schema=.skill.publish`).
+- **Agent default**: For commands with more than one meaningful field, arrays, nested data, or long text, prefer command-level `--input` JSON5. Keep traditional CLI syntax only for trivial commands such as `status`, `project list`, `project switch`, or `task list`.
 
 ## Core Workflow: preflight → discover → validate inputs → generate → collect
 
@@ -83,24 +84,20 @@ Typical fixes:
 ### 5. Generate
 
 ```bash
-pica generate --model fal:fal-ai/flux-pro --kind image_generation --input '{"prompt":"A cat in space"}'
-pica generate --model wavespeed:veo3/text-to-video --kind video_generation --input '{"prompt":"..."}'
+pica --schema=.generate
+pica generate --input @generate.json5
 ```
 
-Generate first runs preflight, then creates an async task, waits for completion, and returns output `blob://` references. Pass the task kind explicitly. If you need the exact `--kind` enum or output behavior, inspect `pica --schema=.generate`. Local files in input are auto-uploaded only after preflight passes:
+Generate first runs preflight, then creates an async task, waits for completion, and returns output `blob://` references. For agent execution, prefer one command-level `--input` payload that carries model selection, task kind, request payload, and optional output settings. Do not memorize generate flags from prose, ask `pica --schema=.generate` for the current exact shape and build the object from that.
 
-```bash
-pica generate --model fal:fal-ai/flux-pro \
-  --kind image_generation \
-  --input '{"image":"file://photo.png","prompt":"enhance this"}'
-```
+Local `file://` references still belong inside the generation payload and are auto-uploaded only after preflight passes.
 
 ### 6. Collect outputs
 
 Output `blob://` refs appear in the generate result. Download to disk:
 
 ```bash
-pica assets download a1 a2 --output-dir ./downloads
+pica assets download --input "{ assets: ['a1', 'a2'], outputDir: './downloads' }"
 ```
 
 Or inspect the full task result:
@@ -117,11 +114,11 @@ By default it lists recent tasks from the current project across all statuses. A
 
 pica assigns short IDs to entities within a session. They persist across CLI invocations.
 
-| Prefix     | Entity  | Assigned by                 | Example                                            |
-| ---------- | ------- | --------------------------- | -------------------------------------------------- |
-| `t1`, `t2` | Tasks   | `generate`, `task get/list` | `pica task get t1`                                 |
-| `a1`, `a2` | Assets  | `generate`, `task get`      | `pica assets download a1 --output-dir ./downloads` |
-| `r1`, `r2` | Prompts | `prompt find`               | `pica prompt get r1`                               |
+| Prefix     | Entity  | Assigned by                 | Example                                                                       |
+| ---------- | ------- | --------------------------- | ----------------------------------------------------------------------------- |
+| `t1`, `t2` | Tasks   | `generate`, `task get/list` | `pica task get t1`                                                            |
+| `a1`, `a2` | Assets  | `generate`, `task get`      | `pica assets download --input "{ assets: ['a1'], outputDir: './downloads' }"` |
+| `r1`, `r2` | Prompts | `prompt find`               | `pica prompt get r1`                                                          |
 
 Use session IDs where the command output explicitly gives you one. Skills are installed by public reference (`owner/slug`), not by session ID.
 
@@ -151,6 +148,15 @@ pica --schema=.skill
 | Check generation progress or result      | `pica task get` / `pica task wait`         | references/tasks.md    |
 | Download or share generated content      | `pica assets download` / `pica assets url` | references/assets.md   |
 | Find domain-specific generation guidance | `pica skill find` → `pica skill install`   | references/skills.md   |
+
+For agent execution, keep the teaching surface narrow:
+
+- trivial commands may use direct CLI syntax
+- complex commands should default to command-level `--input` JSON5
+
+Do not make the agent infer extra command shapes when `--schema` and `--input` cover the request.
+
+When the result will be delivered through an asynchronous message surface, for example Slack, Discord, chat, email, or a notification, and the recipient is not guaranteed to inherit the current auth context, prefer creating a `public` asset URL and send that link back for preview. Do not default to signed URLs in these delivery flows unless the user explicitly wants private, short-lived access.
 
 Common compositions:
 

@@ -32,10 +32,10 @@ Use to recover recent task IDs or scan queue state.
 
 ```bash
 pica task wait t1
-pica task wait t1 t2 t3
+pica task wait --input "{ taskIds: ['t1', 't2', 't3'], timeout: 300 }"
 ```
 
-Use when downstream work needs final results.
+Use direct syntax for the trivial single-task case. Once you need multiple task IDs or timeout control, prefer command-level `--input`.
 
 - non-TTY: block silently, then emit final `toon` on stdout
 - TTY: live status on stderr, final `toon` on stdout

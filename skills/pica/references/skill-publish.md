@@ -105,7 +105,7 @@ ffmpeg -y -i assets/image.png -quality 80 assets/image.webp
 ### 3. Publish
 
 ```bash
-pica skill publish ./my-skill --category video
+pica skill publish --input "{ folder: './my-skill', category: 'video' }"
 ```
 
 Categories: `image`, `video`, `audio`, `workflow`, `other`.
@@ -128,8 +128,8 @@ After finalize, published assets are processed asynchronously:
 To change title, description, tags, or category without re-uploading:
 
 ```bash
-pica skill update picadabra/motion-control --title "New Title" --description "Updated description"
-pica skill update picadabra/motion-control --tags "dance" --tags "motion" --category video
+pica skill update --input "{ skill: 'picadabra/motion-control', title: 'New Title', description: 'Updated description' }"
+pica skill update --input "{ skill: 'picadabra/motion-control', tags: ['dance', 'motion'], category: 'video' }"
 ```
 
 ### 5. Remove

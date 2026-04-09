@@ -40,42 +40,28 @@ The current task kinds are:
 
 If you need to confirm the enum at runtime, use `pica --schema=.generate`.
 
-### 3. Build the input JSON
+### 3. Build one command payload
 
 Use the model schema as guidance, then let preflight validate what it can.
 
-Typical pattern:
+For agent execution, prefer command-level `--input` so the whole generate request lives in one object:
 
 ```bash
-pica generate \
-  --model fal:fal-ai/flux-pro \
-  --kind image_generation \
-  --input '{"prompt":"A cat in space"}'
+pica --schema=.generate
+pica generate --input @generate.json5
 ```
+
+Build `generate.json5` from the current `pica --schema=.generate` output. Do not hardcode flag combinations from memory when the schema can tell you the exact current shape.
 
 ### 4. Use local files only when needed
 
-Reference local media with `file://`:
-
-```bash
-pica generate \
-  --model fal:fal-ai/flux-pro \
-  --kind image_generation \
-  --input '{"image":"file://photo.png","prompt":"enhance this"}'
-```
+Reference local media with `file://` inside the generate payload described by the schema.
 
 Preflight probes local files before upload. If it blocks, fix the asset first.
 
 ### 5. Reuse outputs for chaining
 
-Once an asset exists, reuse its `blob://` ref instead of uploading again:
-
-```bash
-pica generate \
-  --model wavespeed:veo3/image-to-video \
-  --kind video_generation \
-  --input '{"image":"blob://abc123","prompt":"gentle camera move"}'
-```
+Once an asset exists, reuse its `blob://` ref inside the generate payload instead of uploading again.
 
 This is the normal chaining pattern:
 
@@ -133,6 +119,6 @@ Read this when you need help with:
 
 Use `--schema` when you need:
 
-- exact flags
+- exact command payload shape
 - exact enums
-- exact timeout/input contract
+- exact timeout/output contract

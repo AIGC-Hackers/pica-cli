@@ -26,17 +26,32 @@ Important:
 ### 1. Get a shareable URL
 
 ```bash
-pica assets url a1
+pica assets url --input "{ ids: ['a1'], visibility: 'public' }"
 ```
 
-Use this when the user needs a direct link for embedding, review, or handoff.
+Use this when the user needs a direct link for embedding, review, or handoff and the request involves a single asset.
 
-Treat the returned URL as a signed access URL, not a permanent public asset address. If you need exact URL semantics, inspect `pica --schema=.assets.url`.
+For multiple assets, use the same pattern:
+
+```bash
+pica assets url --input "{ ids: ['a1', 'blob://abc123'], visibility: 'public' }"
+```
+
+These are the two canonical `assets url` shapes to teach and reuse:
+
+- single asset: `pica assets url --input "{ ids: ['a1'], visibility: 'public' }"`
+- multiple assets: `pica assets url --input "{ ids: [...], visibility: 'public' }"`
+
+Do not guess alternate syntax in automation when one of these two forms fits. Ask `pica --schema=.assets.url` if you need the current exact payload shape.
+
+If the agent is sending the result through an asynchronous delivery surface, for example IM, chat, email, or notifications, and the receiver may not share the current auth context, default to these `public` URL forms so the preview link still works when opened later.
+
+This returns a durable public share URL owned by Pica. The outer URL stays stable; the server may still redirect internally to short-lived storage URLs.
 
 ### 2. Download assets locally
 
 ```bash
-pica assets download a1 a2 --output-dir ./downloads
+pica assets download --input "{ assets: ['a1', 'a2'], outputDir: './downloads' }"
 ```
 
 Use this when the user needs files on disk for further editing, upload elsewhere, or local inspection.
@@ -75,6 +90,6 @@ Read this when you need guidance on:
 
 Use `--schema` when you need:
 
-- exact positional args
-- exact layout flag shape
+- exact payload shape
+- exact layout field shape
 - exact defaults

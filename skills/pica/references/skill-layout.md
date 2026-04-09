@@ -150,7 +150,7 @@ Then publish:
 
 ```bash
 pica --schema=.skill.publish
-pica skill publish ./my-skill --category video
+pica skill publish --input "{ folder: './my-skill', category: 'video' }"
 ```
 
 If inspect fails on `_layout.mdx`, fix the layout first. Do not brute-force publish retries.
