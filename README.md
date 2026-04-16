@@ -4,13 +4,35 @@ Public release repository for the Picadabra CLI.
 
 This repository hosts:
 
-- GitHub Releases for prebuilt `pica` binaries
+- GitHub Releases for the executable `pica` JavaScript bundle
 - Release checksums
 - Installation guidance
 - Public issue tracking for distribution concerns
 
 The source code lives in a private monorepo. Releases in this repository are
 published automatically from the upstream build pipeline.
+
+## Install With Script
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.sh | bash
+```
+
+To install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.sh | bash -s 0.2.7
+```
+
+Default install path is `~/.local/bin`. Override with `PICA_INSTALL_DIR`:
+
+```bash
+PICA_INSTALL_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.sh | bash
+```
+
+The installer downloads `pica-bundle.tar.gz` from the latest GitHub release,
+verifies it with `checksums.txt`, installs the executable JS bundle as `pica`,
+and installs Bun if the runtime is missing.
 
 ## Install With Homebrew
 
@@ -27,16 +49,9 @@ brew install AIGC-Hackers/pica/pica
 
 ## Direct Download
 
-Download a platform archive from the
+Download `pica-bundle.tar.gz` from the
 [Releases](https://github.com/AIGC-Hackers/pica-cli/releases) page, extract it,
-and place the `pica` binary on your `PATH`.
-
-Current release archives follow this pattern:
-
-- `pica-darwin-arm64.tar.gz`
-- `pica-darwin-x64.tar.gz`
-- `pica-linux-arm64.tar.gz`
-- `pica-linux-x64.tar.gz`
+and place `pica.js` on your `PATH` as `pica`.
 
 Each release also includes a `checksums.txt` file with SHA-256 digests.
 
