@@ -106,32 +106,32 @@ During publish, local asset URLs are rewritten to CDN URLs.
 
 ```html
 <style>
-	.hero {
-		display: grid;
-		grid-template-columns: 1.2fr 1fr;
-		gap: 1.5rem;
-		padding: 1.5rem;
-		border: 1px solid var(--border);
-		border-radius: 1rem;
-		background: var(--card);
-	}
+  .hero {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--card);
+  }
 
-	.hero__media {
-		width: 100%;
-		border-radius: 0.75rem;
-		overflow: hidden;
-		aspect-ratio: 16 / 9;
-	}
+  .hero__media {
+    width: 100%;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+  }
 </style>
 
 <section class="hero">
-	<div>
-		<h1>Motion Control</h1>
-		<p>Transfer reference movement to your character image.</p>
-	</div>
-	<figure class="hero__media">
-		<img src="assets/hero.webp" alt="Motion control preview" />
-	</figure>
+  <div>
+    <h1>Motion Control</h1>
+    <p>Transfer reference movement to your character image.</p>
+  </div>
+  <figure class="hero__media">
+    <img src="assets/hero.webp" alt="Motion control preview" />
+  </figure>
 </section>
 
 <Skill />
