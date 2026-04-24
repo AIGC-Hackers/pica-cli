@@ -5,8 +5,8 @@ Public release repository for the Picadabra CLI.
 This repository hosts:
 
 - GitHub Releases for the executable `pica` JavaScript bundle
-- Release checksums
-- Installation guidance
+- Release checksums and the machine-readable update manifest
+- The public installer script at the repository root
 - Public issue tracking for distribution concerns
 
 The source code lives in a private monorepo. Releases in this repository are
@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.
 To install a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.sh | bash -s 0.2.7
+curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.sh | bash -s 0.2.10
 ```
 
 Default install path is `~/.local/bin`. Override with `PICA_INSTALL_DIR`:
@@ -30,28 +30,17 @@ Default install path is `~/.local/bin`. Override with `PICA_INSTALL_DIR`:
 PICA_INSTALL_DIR=/usr/local/bin curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.sh | bash
 ```
 
-The installer downloads `pica-bundle.tar.gz` from the latest GitHub release,
-verifies it with `checksums.txt`, installs the executable JS bundle as `pica`,
-and installs Bun if the runtime is missing.
-
-## Install With Homebrew
-
-```bash
-brew tap AIGC-Hackers/pica
-brew install pica
-```
-
-If you prefer the fully-qualified formula name:
-
-```bash
-brew install AIGC-Hackers/pica/pica
-```
+The installer downloads `pica-manifest.json` for the chosen release, verifies
+`pica-bundle.tar.gz`, installs Bun when it is missing or below the required
+minimum version, and installs `pica` as a thin wrapper over the managed bundle
+layout under `~/.local/share/pica/cli`.
 
 ## Direct Download
 
-Download `pica-bundle.tar.gz` from the
-[Releases](https://github.com/AIGC-Hackers/pica-cli/releases) page, extract it,
-and place `pica.js` on your `PATH` as `pica`.
+Download `pica-bundle.tar.gz` and `pica-manifest.json` from the
+[Releases](https://github.com/AIGC-Hackers/pica-cli/releases) page, extract the
+bundle, and place `pica.js` in your preferred managed layout if you do not want
+to use the installer script.
 
 Each release also includes a `checksums.txt` file with SHA-256 digests.
 

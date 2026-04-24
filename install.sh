@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
-# Install pica CLI from the latest GitHub release.
+# Install pica CLI from the public release repository.
 # Usage: curl -fsSL https://raw.githubusercontent.com/AIGC-Hackers/pica-cli/main/install.sh | bash
 set -euo pipefail
 
 REPO="AIGC-Hackers/pica-cli"
-ASSET="pica-bundle.tar.gz"
+MANIFEST_ASSET="pica-manifest.json"
 INSTALL_DIR="${PICA_INSTALL_DIR:-$HOME/.local/bin}"
+PICA_HOME="${PICA_HOME:-$HOME/.local/share/pica}"
+PICA_CLI_HOME="$PICA_HOME/cli"
+PICA_VERSIONS_DIR="$PICA_CLI_HOME/versions"
+PICA_CURRENT_LINK="$PICA_CLI_HOME/current"
+BUN_INSTALL_SCRIPT_URL="https://bun.sh/install"
+
+fail() {
+  echo "pica installer: $*" >&2
+  exit 1
+}
 
 require_command() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "error: required command not found: $1" >&2
-    exit 1
-  fi
+  command -v "$1" >/dev/null 2>&1 || fail "missing required command: $1"
 }
 
 sha256_file() {
@@ -25,8 +32,46 @@ sha256_file() {
     return
   fi
 
-  echo "error: sha256sum or shasum is required to verify the download" >&2
-  exit 1
+  fail "sha256sum or shasum is required to verify the download"
+}
+
+normalize_version() {
+  local value
+  value="${1#v}"
+  value="${value%%-*}"
+  value="${value%%+*}"
+  echo "$value"
+}
+
+version_ge() {
+  local left right
+  local left_major left_minor left_patch
+  local right_major right_minor right_patch
+
+  left="$(normalize_version "$1")"
+  right="$(normalize_version "$2")"
+
+  IFS=. read -r left_major left_minor left_patch <<<"$left"
+  IFS=. read -r right_major right_minor right_patch <<<"$right"
+
+  left_major="${left_major:-0}"
+  left_minor="${left_minor:-0}"
+  left_patch="${left_patch:-0}"
+  right_major="${right_major:-0}"
+  right_minor="${right_minor:-0}"
+  right_patch="${right_patch:-0}"
+
+  if (( left_major != right_major )); then
+    (( left_major > right_major ))
+    return
+  fi
+
+  if (( left_minor != right_minor )); then
+    (( left_minor > right_minor ))
+    return
+  fi
+
+  (( left_patch >= right_patch ))
 }
 
 resolve_tag() {
@@ -40,76 +85,136 @@ resolve_tag() {
     | head -n 1
 }
 
+json_value() {
+  local key="$1"
+  sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" | head -n 1
+}
+
+resolve_bun_bin() {
+  if command -v bun >/dev/null 2>&1; then
+    command -v bun
+    return
+  fi
+
+  if [ -x "$HOME/.bun/bin/bun" ]; then
+    echo "$HOME/.bun/bin/bun"
+    return
+  fi
+
+  return 1
+}
+
+ensure_bun() {
+  local minimum_version bun_bin current_version
+
+  minimum_version="$1"
+  bun_bin="$(resolve_bun_bin || true)"
+  current_version=""
+
+  if [ -n "$bun_bin" ]; then
+    current_version="$("$bun_bin" --version)"
+  fi
+
+  if [ -n "$current_version" ] && version_ge "$current_version" "$minimum_version"; then
+    return
+  fi
+
+  # Keep first install aligned with the CLI updater: Bun comes from the official
+  # installer, and pica owns only the JS bundle plus the current pointer.
+  echo "Installing Bun v$minimum_version..."
+  curl -fsSL "$BUN_INSTALL_SCRIPT_URL" | bash -s "bun-v$minimum_version"
+  export PATH="$HOME/.bun/bin:$PATH"
+
+  bun_bin="$(resolve_bun_bin || true)"
+  [ -n "$bun_bin" ] || fail "Bun installation completed but bun is still not on PATH"
+
+  current_version="$("$bun_bin" --version)"
+  version_ge "$current_version" "$minimum_version" || \
+    fail "installed Bun version $current_version is below required version $minimum_version"
+}
+
+write_wrapper() {
+  mkdir -p "$INSTALL_DIR"
+  cat > "$INSTALL_DIR/pica" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+PICA_HOME="${PICA_HOME:-$HOME/.local/share/pica}"
+
+if command -v bun >/dev/null 2>&1; then
+  PICA_BUN="$(command -v bun)"
+elif [ -x "$HOME/.bun/bin/bun" ]; then
+  PICA_BUN="$HOME/.bun/bin/bun"
+else
+  echo "pica: Bun is missing. Re-run the installer." >&2
+  exit 1
+fi
+
+exec "$PICA_BUN" "$PICA_HOME/cli/current/pica.js" "$@"
+EOF
+  chmod 0555 "$INSTALL_DIR/pica"
+}
+
 require_command curl
 require_command tar
 require_command awk
 require_command sed
 require_command mktemp
 
-tag=$(resolve_tag "${1:-}")
-if [ -z "$tag" ]; then
-  echo "error: failed to resolve latest pica release tag" >&2
-  exit 1
-fi
+tag="$(resolve_tag "${1:-}")"
+[ -n "$tag" ] || fail "failed to resolve pica release tag"
 
-tmp_dir=$(mktemp -d)
-install_tmp=""
-
+tmp_dir="$(mktemp -d)"
 cleanup() {
   rm -rf "$tmp_dir"
-  if [ -n "$install_tmp" ]; then
-    rm -f "$install_tmp"
-  fi
 }
-
 trap cleanup EXIT
 
-asset_url="https://github.com/$REPO/releases/download/$tag/$ASSET"
-checksums_url="https://github.com/$REPO/releases/download/$tag/checksums.txt"
-archive="$tmp_dir/$ASSET"
+manifest_url="https://github.com/$REPO/releases/download/$tag/$MANIFEST_ASSET"
+manifest_path="$tmp_dir/$MANIFEST_ASSET"
 
-echo "Installing pica $tag to $INSTALL_DIR ..."
+echo "Installing pica $tag ..."
+curl -fsSL "$manifest_url" -o "$manifest_path"
 
-curl -fsSL "$asset_url" -o "$archive"
-expected_sha=$(curl -fsSL "$checksums_url" | awk -v asset="$ASSET" '$2 == asset { print $1 }')
+manifest_content="$(cat "$manifest_path")"
+bundle_url="$(printf '%s\n' "$manifest_content" | json_value "url")"
+bundle_sha="$(printf '%s\n' "$manifest_content" | json_value "sha256")"
+minimum_bun_version="$(printf '%s\n' "$manifest_content" | json_value "minimumBunVersion")"
+bundle_version="$(printf '%s\n' "$manifest_content" | json_value "version")"
 
-if [ -z "$expected_sha" ]; then
-  echo "error: $ASSET is missing from checksums.txt for $tag" >&2
-  exit 1
-fi
+[ -n "$bundle_url" ] || fail "manifest is missing bundle.url"
+[ -n "$bundle_sha" ] || fail "manifest is missing bundle.sha256"
+[ -n "$minimum_bun_version" ] || fail "manifest is missing minimumBunVersion"
+[ -n "$bundle_version" ] || fail "manifest is missing version"
 
-actual_sha=$(sha256_file "$archive")
-if [ "$actual_sha" != "$expected_sha" ]; then
-  echo "error: checksum mismatch for $ASSET" >&2
-  echo "expected: $expected_sha" >&2
-  echo "actual:   $actual_sha" >&2
-  exit 1
-fi
+ensure_bun "$minimum_bun_version"
 
-tar -xzf "$archive" -C "$tmp_dir"
+archive="$tmp_dir/pica-bundle.tar.gz"
+extract_dir="$tmp_dir/extract"
+mkdir -p "$extract_dir"
 
-if [ ! -f "$tmp_dir/pica.js" ]; then
-  echo "error: release archive does not contain pica.js" >&2
-  exit 1
-fi
+curl -fsSL "$bundle_url" -o "$archive"
 
-if ! command -v bun >/dev/null 2>&1; then
-  echo "bun runtime not found; installing ..."
-  curl -fsSL https://bun.sh/install | bash
-  export PATH="$HOME/.bun/bin:$PATH"
-fi
+actual_sha="$(sha256_file "$archive")"
+[ "$actual_sha" = "$bundle_sha" ] || \
+  fail "bundle checksum mismatch: expected $bundle_sha, got $actual_sha"
 
-mkdir -p "$INSTALL_DIR"
-install_tmp="$INSTALL_DIR/.pica.tmp.$$"
-cp "$tmp_dir/pica.js" "$install_tmp"
-chmod 0755 "$install_tmp"
-mv -f "$install_tmp" "$INSTALL_DIR/pica"
+tar -xzf "$archive" -C "$extract_dir"
+[ -f "$extract_dir/pica.js" ] || fail "release archive does not contain pica.js"
+
+target_dir="$PICA_VERSIONS_DIR/$bundle_version"
+mkdir -p "$target_dir"
+cp "$extract_dir/pica.js" "$target_dir/pica.js"
+chmod 0555 "$target_dir/pica.js"
+
+mkdir -p "$(dirname "$PICA_CURRENT_LINK")"
+ln -sfn "$target_dir" "$PICA_CURRENT_LINK"
+
+write_wrapper
 
 case ":$PATH:" in
   *":$INSTALL_DIR:"*) ;;
-  *) echo "hint: add $INSTALL_DIR to your PATH if it is not already" ;;
+  *) echo "Add $INSTALL_DIR to your PATH if it is not already." ;;
 esac
 
-"$INSTALL_DIR/pica" --help >/dev/null
-
-echo "done: $INSTALL_DIR/pica"
+echo "Installed pica v$bundle_version to $INSTALL_DIR/pica"
