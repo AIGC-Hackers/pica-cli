@@ -140,14 +140,14 @@ pica --schema=.skill
 
 ## Choosing the right command
 
-| Situation                                | Command                                    | Reference              |
-| ---------------------------------------- | ------------------------------------------ | ---------------------- |
-| Find which models exist for a task       | `pica model search`                        | references/models.md   |
-| Get model input schema before generating | `pica model info`                          | references/models.md   |
-| Generate images, videos, or audio        | `pica generate`                            | references/generate.md |
-| Check generation progress or result      | `pica task get` / `pica task wait`         | references/tasks.md    |
-| Download or share generated content      | `pica assets download` / `pica assets url` | references/assets.md   |
-| Find domain-specific generation guidance | `pica skill find` → `pica skill install`   | references/skills.md   |
+| Situation                                | Command                                   | Reference              |
+| ---------------------------------------- | ----------------------------------------- | ---------------------- |
+| Find which models exist for a task       | `pica model search`                       | references/models.md   |
+| Get model input schema before generating | `pica model info`                         | references/models.md   |
+| Generate images, videos, or audio        | `pica generate`                           | references/generate.md |
+| Check generation progress or result      | `pica task get` / `pica task wait`        | references/tasks.md    |
+| Upload, download, or share assets        | `pica assets upload` / `download` / `url` | references/assets.md   |
+| Find domain-specific generation guidance | `pica skill find` → `pica skill install`  | references/skills.md   |
 
 For agent execution, keep the teaching surface narrow:
 

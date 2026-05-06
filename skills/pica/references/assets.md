@@ -1,6 +1,6 @@
 # pica assets
 
-Use `pica assets` after a task has produced outputs and you need to download or share them.
+Use `pica assets` when you need to upload local assets, create share URLs, or download task outputs.
 
 For the exact current command contract, inspect:
 
@@ -21,9 +21,33 @@ Important:
 - `a1` is a session-local alias. It is convenient inside the current CLI conversation, but it is not a durable cross-session identifier.
 - `blob://...` and raw blob IDs refer to the underlying asset and are the safer choice when you need to carry a reference across steps or quote it back to the user.
 
-## Two common jobs
+## Common jobs
 
-### 1. Get a shareable URL
+### 1. Upload a local asset and get a URL
+
+```bash
+pica assets upload --input "{ files: ['./hero.png'], purpose: 'brand-asset', visibility: 'public' }"
+```
+
+Use this when the user or an operator needs to put an asset into Pica and get a stable URL for a page, prompt, handoff, or external reference.
+
+By default uploads are app-scoped, not project-scoped, so page assets do not accidentally inherit whatever generation project is currently selected. Add `project` only when the asset should belong to a specific project history:
+
+```bash
+pica assets upload --input "{ files: ['./reference.png'], project: '<project-id>', purpose: 'reference' }"
+```
+
+Use `visibility: 'public'` for durable page or async-message links. Use `visibility: 'signed'` when the caller only needs a short-lived authenticated storage URL.
+
+For video uploads, set `syncVideoStream: true` after the backend supports asset stream sync:
+
+```bash
+pica assets upload --input "{ files: ['./demo.mp4'], purpose: 'brand-asset', visibility: 'public', syncVideoStream: true }"
+```
+
+That returns the normal asset URL plus the Bunny Stream HLS URL when encoding registration succeeds.
+
+### 2. Get a shareable URL for an existing asset
 
 ```bash
 pica assets url --input "{ ids: ['a1'], visibility: 'public' }"
@@ -48,7 +72,7 @@ If the agent is sending the result through an asynchronous delivery surface, for
 
 This returns a durable public share URL owned by Pica. The outer URL stays stable; the server may still redirect internally to short-lived storage URLs.
 
-### 2. Download assets locally
+### 3. Download assets locally
 
 ```bash
 pica assets download --input "{ assets: ['a1', 'a2'], outputDir: './downloads' }"
@@ -84,7 +108,7 @@ Download only when the user explicitly needs a local file or external share link
 
 Read this when you need guidance on:
 
-- when to use `assets url` vs `assets download`
+- when to use `assets upload`, `assets url`, or `assets download`
 - how to think about asset refs
 - when to keep chaining with `blob://` instead of downloading
 
