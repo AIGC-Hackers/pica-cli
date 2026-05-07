@@ -88,13 +88,15 @@ pica --schema=.generate
 pica generate --input @generate.json5
 ```
 
-Generate first runs preflight, then creates an async task, waits for completion, and returns output `blob://` references. For agent execution, prefer one command-level `--input` payload that carries model selection, task kind, request payload, and optional output settings. Do not memorize generate flags from prose, ask `pica --schema=.generate` for the current exact shape and build the object from that.
+Generate first runs preflight, then creates an async task, waits for completion, and emits the final successful result as TOON on stdout. Progress, preflight details, and errors are stderr. Media outputs are directive strings such as `::image{url:"blob://...",mime:"image/png"}` or `::video{...}` so host UIs can render them while humans can still read the result.
+
+For agent execution, prefer one command-level `--input` payload that carries model selection, task kind, request payload, and optional output settings. Do not memorize generate flags from prose, ask `pica --schema=.generate` for the current exact shape and build the object from that.
 
 Local `file://` references still belong inside the generation payload and are auto-uploaded only after preflight passes.
 
 ### 6. Collect outputs
 
-Output `blob://` refs appear in the generate result. Download to disk:
+Output media directives include `blob://` refs when no `--output` path is provided. Download to disk:
 
 ```bash
 pica assets download --input "{ assets: ['a1', 'a2'], outputDir: './downloads' }"
@@ -121,6 +123,8 @@ pica assigns short IDs to entities within a session. They persist across CLI inv
 | `r1`, `r2` | Prompts | `prompt find`               | `pica prompt get r1`                                                          |
 
 Use session IDs where the command output explicitly gives you one. Skills are installed by public reference (`owner/slug`), not by session ID.
+
+Discovery commands such as `prompt find`, `model search`, `skill find`, `skill list`, and `task list` emit successful results as TOON on stdout. Empty results are represented as empty arrays in the result object, not prose messages.
 
 ## Schema-first habit
 

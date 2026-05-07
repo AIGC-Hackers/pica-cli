@@ -70,7 +70,7 @@ Do not guess alternate syntax in automation when one of these two forms fits. As
 
 If the agent is sending the result through an asynchronous delivery surface, for example IM, chat, email, or notifications, and the receiver may not share the current auth context, default to these `public` URL forms so the preview link still works when opened later.
 
-This returns a durable public share URL owned by Pica. The outer URL stays stable; the server may still redirect internally to short-lived storage URLs.
+This returns TOON with `assets` entries containing media directives. For public URLs, the directive URL is a durable public share URL owned by Pica. The outer URL stays stable; the server may still redirect internally to short-lived storage URLs.
 
 ### 3. Download assets locally
 
@@ -78,7 +78,7 @@ This returns a durable public share URL owned by Pica. The outer URL stays stabl
 pica assets download --input "{ assets: ['a1', 'a2'], outputDir: './downloads' }"
 ```
 
-Use this when the user needs files on disk for further editing, upload elsewhere, or local inspection.
+Use this when the user needs files on disk for further editing, upload elsewhere, or local inspection. Successful downloads emit TOON with `files` media directives using `file://` URLs.
 
 ## Layout choice when downloading
 

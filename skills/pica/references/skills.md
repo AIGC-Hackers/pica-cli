@@ -36,6 +36,16 @@ pica skill find "ugc ads"
 pica skill install picadabra/motion-control
 ```
 
+`skill find` and `skill list` emit successful results as TOON on stdout:
+
+```toon
+skills[1]{ref,title,description,category,installs}:
+  picadabra/motion-control,Motion Control,Video camera motion recipes,video,12
+```
+
+Use the public `ref` directly with `pica skill install <owner>/<slug>`. Skills
+do not use session IDs.
+
 Public registry skills install under:
 
 ```text

@@ -87,9 +87,9 @@ Treat results like this:
 
 ## Output handling
 
-Without `--output`, `generate` prints `blob://` refs for chaining.
+Without `--output`, `generate` emits TOON with `outputs` media directives that contain `blob://` refs for chaining.
 
-With `--output`, results download automatically using the provided template path.
+With `--output`, results download automatically using the provided template path and `outputs` contains `file://` media directives.
 
 If you need the exact template variables supported today, check:
 

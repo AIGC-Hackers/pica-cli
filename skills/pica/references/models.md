@@ -25,6 +25,19 @@ Search is for narrowing the space:
 pica model search "flux"
 ```
 
+Successful search emits TOON on stdout:
+
+```toon
+models[1]{id,name,provider,modelId,category,desc}:
+  fal:fal-ai/flux/dev,FLUX Dev,fal,fal-ai/flux/dev,image,Fast image generation model
+```
+
+Empty search results are still a successful result:
+
+```toon
+models:
+```
+
 Use task-shaped queries, not provider-shaped queries, when the user cares about outcome more than brand:
 
 - `"image upscale"`
@@ -40,6 +53,9 @@ Do not assume every registry implements every search filter the same way. Use se
 ```bash
 pica model info fal:fal-ai/flux-pro
 ```
+
+Successful info emits TOON on stdout with a `models` array. The command accepts
+multiple model refs, so parse the array even for one requested model.
 
 Use it to learn:
 

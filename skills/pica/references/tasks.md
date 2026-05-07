@@ -27,6 +27,14 @@ pica task list
 ```
 
 Use to recover recent task IDs or scan queue state.
+Successful list output is TOON on stdout:
+
+```toon
+tasks[1]{id,model,status,created}:
+  t1,fal:fal-ai/flux/dev,completed,2026-05-07T00:00:00.000Z
+```
+
+Empty lists emit an empty `tasks` result, not a prose "not found" message.
 
 ### Wait for completion
 
@@ -37,8 +45,8 @@ pica task wait --input "{ taskIds: ['t1', 't2', 't3'], timeout: 300 }"
 
 Use direct syntax for the trivial single-task case. Once you need multiple task IDs or timeout control, prefer command-level `--input`.
 
-- non-TTY: block silently, then emit final `toon` on stdout
-- TTY: live status on stderr, final `toon` on stdout
+- non-TTY: block silently, then emit final TOON on stdout
+- TTY: live status on stderr, final TOON on stdout
 - multi-task output preserves input order
 
 ## Status semantics
@@ -47,4 +55,4 @@ Use direct syntax for the trivial single-task case. Once you need multiple task 
 
 ## Output refs
 
-Completed tasks expose `blob://` refs. Reuse them in `pica generate` or fetch them with `pica assets`.
+Completed tasks expose media directives in `outputs`, using `blob://` URLs for chaining. Reuse those blob refs in `pica generate` or fetch them with `pica assets`.
