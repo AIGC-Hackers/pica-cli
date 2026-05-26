@@ -7,6 +7,7 @@ For the exact current command contract, inspect:
 ```bash
 pica --schema=.skill.publish
 pica --schema=.skill.inspect
+pica --schema=.skill.update
 ```
 
 ## Skill folder structure
@@ -129,7 +130,7 @@ To change title, description, tags, or category without re-uploading:
 
 ```bash
 pica skill update --input "{ skill: 'picadabra/motion-control', title: 'New Title', description: 'Updated description' }"
-pica skill update --input "{ skill: 'picadabra/motion-control', tags: ['dance', 'motion'], category: 'video' }"
+pica skill update --input "{ skill: 'picadabra/motion-control', tags: 'dance,motion', category: 'video' }"
 ```
 
 ### 5. Remove

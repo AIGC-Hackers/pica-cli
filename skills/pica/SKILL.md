@@ -14,8 +14,9 @@ description: >-
 - **Session IDs**: pica assigns short IDs to task-like workflows where chaining helps. Published skills use public `owner/slug` references instead.
 - **Never guess model IDs**: Always use `pica model search` + `pica model info` to get exact `provider:modelId` strings.
 - **Always respect preflight**: `pica generate` now runs preflight before upload/dispatch. Treat preflight failures as input problems to fix, not as something to brute-force past.
-- **Use `--schema` for exact command shape**: these docs teach workflow and judgment. When you need the current flags, enums, or input contract, inspect `pica --schema` (for example `pica --schema=.generate`, `pica --schema=.task`, `pica --schema=.skill.publish`).
-- **Agent default**: For commands with more than one meaningful field, arrays, nested data, or long text, prefer command-level `--input` JSON5. Keep traditional CLI syntax only for trivial commands such as `status`, `project list`, `project switch`, or `task list`.
+- **Use `--schema` for exact command shape**: these docs teach workflow and judgment. Before using a command you have not just inspected, run `pica --schema` (for example `pica --schema=.generate`, `pica --schema=.task`, `pica --schema=.skill.publish`).
+- **Agent default**: Treat `--schema` output as the current contract. Keep prose examples as workflow hints only; do not infer flags, list syntax, defaults, or JSON payload shape from this skill when `--schema` can answer it.
+- **List inputs**: Pica CLI list-like command inputs are represented as a single comma-separated string, for example `a1,a2` or `owner/a,owner/b`. Do not use space-separated varargs such as `a1 a2`, and do not assume repeated flags such as `--ids a1 --ids a2`.
 
 ## Core Workflow: preflight → discover → validate inputs → generate → collect
 
@@ -23,6 +24,7 @@ description: >-
 
 ```bash
 pica status
+pica --schema=.project
 ```
 
 Shows auth state, credits, and current project. Fix any issues before proceeding:
@@ -34,6 +36,7 @@ Shows auth state, credits, and current project. Fix any issues before proceeding
 ### 2. Discover content skills (recommended)
 
 ```bash
+pica --schema=.skill
 pica skill find "ugc ads"
 pica skill install dio/motion-control
 ```
@@ -42,7 +45,7 @@ Skills are domain-specific guides that teach model selection, prompt techniques,
 
 ```bash
 # The install output tells you the path
-cat .agents/skills/<owner>/<slug>/SKILL.md
+cat .agents/skills/pica.<slug>/SKILL.md
 ```
 
 Skills may recommend specific models, prompt patterns, or multi-step generation workflows. Follow their guidance — they encode expert knowledge for the content domain.
@@ -50,6 +53,7 @@ Skills may recommend specific models, prompt patterns, or multi-step generation 
 ### 3. Discover models
 
 ```bash
+pica --schema=.model
 pica model search "flux"
 pica model search "text to video"
 pica model info fal:fal-ai/flux-pro/v1.1
@@ -99,7 +103,8 @@ Local `file://` references still belong inside the generation payload and are au
 Output media directives include `blob://` refs when no `--output` path is provided. Download to disk:
 
 ```bash
-pica assets download --input "{ assets: ['a1', 'a2'], outputDir: './downloads' }"
+pica --schema=.assets
+pica assets download a1,a2 --output-dir ./downloads
 ```
 
 Or inspect the full task result:
@@ -116,11 +121,11 @@ By default it lists recent tasks from the current project across all statuses. A
 
 pica assigns short IDs to entities within a session. They persist across CLI invocations.
 
-| Prefix     | Entity  | Assigned by                 | Example                                                                       |
-| ---------- | ------- | --------------------------- | ----------------------------------------------------------------------------- |
-| `t1`, `t2` | Tasks   | `generate`, `task get/list` | `pica task get t1`                                                            |
-| `a1`, `a2` | Assets  | `generate`, `task get`      | `pica assets download --input "{ assets: ['a1'], outputDir: './downloads' }"` |
-| `r1`, `r2` | Prompts | `prompt find`               | `pica prompt get r1`                                                          |
+| Prefix     | Entity  | Assigned by                 | Example                      |
+| ---------- | ------- | --------------------------- | ---------------------------- |
+| `t1`, `t2` | Tasks   | `generate`, `task get/list` | `pica task get t1`           |
+| `a1`, `a2` | Assets  | `generate`, `task get`      | `pica assets download a1,a2` |
+| `r1`, `r2` | Prompts | `prompt find`               | `pica prompt get r1,r2`      |
 
 Use session IDs where the command output explicitly gives you one. Skills are installed by public reference (`owner/slug`), not by session ID.
 
@@ -156,7 +161,7 @@ pica --schema=.skill
 For agent execution, keep the teaching surface narrow:
 
 - trivial commands may use direct CLI syntax
-- complex commands should default to command-level `--input` JSON5
+- complex commands may use command-level `--input` when `--schema` shows the exact payload shape
 
 Do not make the agent infer extra command shapes when `--schema` and `--input` cover the request.
 

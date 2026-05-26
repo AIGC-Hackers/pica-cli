@@ -8,6 +8,9 @@ For the exact current command contract, inspect:
 pica --schema=.skill
 ```
 
+For multiple skill refs, pass one comma-separated string such as
+`owner/a,owner/b`. Do not use space-separated varargs.
+
 ## Why this matters
 
 The best skill often saves more time than any amount of random model trial-and-error.
@@ -49,13 +52,13 @@ do not use session IDs.
 Public registry skills install under:
 
 ```text
-.agents/skills/<owner>/<slug>/
+.agents/skills/pica.<slug>/
 ```
 
 Read the installed entry point here:
 
 ```text
-.agents/skills/<owner>/<slug>/SKILL.md
+.agents/skills/pica.<slug>/SKILL.md
 ```
 
 ## When to use skills first

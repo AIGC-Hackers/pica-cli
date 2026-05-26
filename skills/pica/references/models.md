@@ -8,6 +8,9 @@ For the exact current command contract, inspect:
 pica --schema=.model
 ```
 
+For multiple model refs, pass one comma-separated string. Do not use
+space-separated varargs.
+
 ## The two-step pattern
 
 Model work should usually happen in this order:
@@ -55,7 +58,8 @@ pica model info fal:fal-ai/flux-pro
 ```
 
 Successful info emits TOON on stdout with a `models` array. The command accepts
-multiple model refs, so parse the array even for one requested model.
+multiple model refs as a comma-separated string, so parse the output array even
+for one requested model.
 
 Use it to learn:
 

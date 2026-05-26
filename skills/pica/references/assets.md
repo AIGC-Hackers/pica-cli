@@ -8,6 +8,10 @@ For the exact current command contract, inspect:
 pica --schema=.assets
 ```
 
+Treat the schema as authoritative. List-like inputs such as `files`, `ids`, and
+`assets` are comma-separated strings in the CLI contract, not arrays or
+space-separated varargs.
+
 ## Asset refs
 
 Pica accepts three common asset reference shapes:
@@ -26,7 +30,7 @@ Important:
 ### 1. Upload a local asset and get a URL
 
 ```bash
-pica assets upload --input "{ files: ['./hero.png'], purpose: 'brand-asset', visibility: 'public' }"
+pica assets upload ./hero.png --purpose brand-asset --visibility public
 ```
 
 Use this when the user or an operator needs to put an asset into Pica and get a stable URL for a page, prompt, handoff, or external reference.
@@ -34,7 +38,7 @@ Use this when the user or an operator needs to put an asset into Pica and get a 
 By default uploads are app-scoped, not project-scoped, so page assets do not accidentally inherit whatever generation project is currently selected. Add `project` only when the asset should belong to a specific project history:
 
 ```bash
-pica assets upload --input "{ files: ['./reference.png'], project: '<project-id>', purpose: 'reference' }"
+pica assets upload ./reference.png --project <project-id> --purpose reference
 ```
 
 Use `visibility: 'public'` for durable page or async-message links. Use `visibility: 'signed'` when the caller only needs a short-lived authenticated storage URL.
@@ -42,7 +46,7 @@ Use `visibility: 'public'` for durable page or async-message links. Use `visibil
 For video uploads, set `syncVideoStream: true` after the backend supports asset stream sync:
 
 ```bash
-pica assets upload --input "{ files: ['./demo.mp4'], purpose: 'brand-asset', visibility: 'public', syncVideoStream: true }"
+pica assets upload ./demo.mp4 --purpose brand-asset --visibility public --sync-video-stream
 ```
 
 That returns the normal asset URL plus the Bunny Stream HLS URL when encoding registration succeeds.
@@ -50,7 +54,7 @@ That returns the normal asset URL plus the Bunny Stream HLS URL when encoding re
 ### 2. Get a shareable URL for an existing asset
 
 ```bash
-pica assets url --input "{ ids: ['a1'], visibility: 'public' }"
+pica assets url --ids a1 --visibility public
 ```
 
 Use this when the user needs a direct link for embedding, review, or handoff and the request involves a single asset.
@@ -58,13 +62,13 @@ Use this when the user needs a direct link for embedding, review, or handoff and
 For multiple assets, use the same pattern:
 
 ```bash
-pica assets url --input "{ ids: ['a1', 'blob://abc123'], visibility: 'public' }"
+pica assets url --ids a1,blob://abc123 --visibility public
 ```
 
 These are the two canonical `assets url` shapes to teach and reuse:
 
-- single asset: `pica assets url --input "{ ids: ['a1'], visibility: 'public' }"`
-- multiple assets: `pica assets url --input "{ ids: [...], visibility: 'public' }"`
+- single asset: `pica assets url --ids a1 --visibility public`
+- multiple assets: `pica assets url --ids a1,blob://abc123 --visibility public`
 
 Do not guess alternate syntax in automation when one of these two forms fits. Ask `pica --schema=.assets.url` if you need the current exact payload shape.
 
@@ -75,7 +79,7 @@ This returns TOON with `assets` entries containing media directives. For public 
 ### 3. Download assets locally
 
 ```bash
-pica assets download --input "{ assets: ['a1', 'a2'], outputDir: './downloads' }"
+pica assets download a1,a2 --output-dir ./downloads
 ```
 
 Use this when the user needs files on disk for further editing, upload elsewhere, or local inspection. Successful downloads emit TOON with `files` media directives using `file://` URLs.

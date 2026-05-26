@@ -9,6 +9,7 @@ pica --schema=.task
 ```
 
 Use session IDs like `t1` when available.
+For multiple task IDs, use one comma-separated string such as `t1,t2,t3`.
 
 ## Common actions
 
@@ -40,10 +41,12 @@ Empty lists emit an empty `tasks` result, not a prose "not found" message.
 
 ```bash
 pica task wait t1
-pica task wait --input "{ taskIds: ['t1', 't2', 't3'], timeout: 300 }"
+pica task wait t1,t2,t3 --timeout 300
 ```
 
-Use direct syntax for the trivial single-task case. Once you need multiple task IDs or timeout control, prefer command-level `--input`.
+Use direct syntax for the trivial single-task case. For multiple tasks, keep the
+task list in one argument. Do not use `pica task wait t1 t2` or
+`--task-ids t1 t2`.
 
 - non-TTY: block silently, then emit final TOON on stdout
 - TTY: live status on stderr, final TOON on stdout
